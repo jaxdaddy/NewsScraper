@@ -3,8 +3,9 @@ import fitz  # PyMuPDF
 import google.generativeai as genai
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from datetime import datetime
+import markdown # Import the markdown library
 
 def read_prompts(prompts_file="prompts.txt"):
     """Reads prompts from the prompts.txt file."""
@@ -48,7 +49,7 @@ def evaluate_with_gemini(prompts, file_contents):
         try:
             # Prepare parts for multimodal input
             # Add instruction for structured output
-            modified_prompt_text = prompt_text + "\n\nPlease provide your response in a clear, concise, and structured format, using Markdown (e.g., bullet points, bolding) where appropriate for readability."
+            modified_prompt_text = prompt_text + "\n\nPlease provide your response in a clear, concise, and structured format, using Markdown (e.g., bullet points, bolding, numbered lists) where appropriate for readability."
             parts = [modified_prompt_text]
             for content_item in file_contents:
                 parts.append(content_item['data'])
@@ -66,17 +67,24 @@ def generate_pdf_report(evaluations, output_filename):
     styles = getSampleStyleSheet()
     story = []
 
+    # Custom style for indented paragraphs (for list items)
+    styles.add(ParagraphStyle(name='Indented', parent=styles['Normal'],
+                              leftIndent=36, firstLineIndent=0,
+                              spaceBefore=6, spaceAfter=6))
+
     story.append(Paragraph("Gemini Prompt Evaluation Report", styles['h1']))
-    story.append(Spacer(1, 0.2 * 25.4)) # More space after title
+    story.append(Spacer(1, 0.3 * 25.4)) # More space after title
 
     for eval_item in evaluations:
         story.append(Paragraph(f"<b>Prompt:</b> {eval_item['prompt']}", styles['h2']))
-        story.append(Spacer(1, 0.1 * 25.4))
+        story.append(Spacer(1, 0.2 * 25.4)) # Increased space
         story.append(Paragraph(f"<b>Response:</b>", styles['h3']))
-        # Note: reportlab's Paragraph does not natively render Markdown. 
-        # Gemini's Markdown output will appear as plain text unless parsed.
-        story.append(Paragraph(eval_item['response'], styles['Normal']))
-        story.append(Spacer(1, 0.4 * 25.4)) # More space between prompt-response pairs
+        # Convert Markdown response to HTML for better rendering in ReportLab
+        # Note: For proper table rendering, a Markdown table parser would be needed to convert
+        # Markdown tables into ReportLab Table objects.
+        html_response = markdown.markdown(eval_item['response'])
+        story.append(Paragraph(html_response, styles['Indented'])) # Use the new indented style
+        story.append(Spacer(1, 0.6 * 25.4)) # Increased space between prompt-response pairs
 
     try:
         doc.build(story)
