@@ -48,7 +48,12 @@ def evaluate_with_gemini(prompts, file_contents):
         try:
             # Prepare parts for multimodal input
             # Add instruction for structured output
-            modified_prompt_text = prompt_text + "\n\nPlease provide your response in a clear, concise, and structured format, using Markdown (e.g., bullet points, bolding, numbered lists) where appropriate for readability."
+            modified_prompt_text = prompt_text
+            if "table with columns" in prompt_text.lower() or "markdown table" in prompt_text.lower():
+                modified_prompt_text += "\n\nProvide your response as a Markdown table, ensuring all columns are properly aligned and delimited by pipes. Do not include any extra text before or after the table."
+            else:
+                modified_prompt_text += "\n\nProvide your response in a clear, concise, and structured format, using Markdown (e.g., bullet points, bolding, numbered lists) where appropriate for readability."
+
             parts = [modified_prompt_text]
             for content_item in file_contents:
                 parts.append(content_item['data'])
@@ -59,6 +64,7 @@ def evaluate_with_gemini(prompts, file_contents):
             print(f"Error evaluating prompt '{prompt_text}' with Gemini: {e}")
             evaluations.append({'prompt': prompt_text, 'response': f"Error: {e}"})
     return evaluations
+
 
 def generate_pdf_report(evaluations, output_filename):
     """Generates a PDF report from Gemini evaluations."""
