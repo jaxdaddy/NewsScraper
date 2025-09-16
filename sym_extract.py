@@ -63,42 +63,34 @@ def extract_tickers_from_text(text):
         return sorted(list(set(tickers))) # Deduplicate and sort
     return []
 
-def run_ticker_extraction():
-    pdf_dir = "files/"
+def run_ticker_extraction(pdf_files_to_process):
     all_extracted_tickers = set()
     file_results = {}
 
-    if not os.path.exists(pdf_dir):
-        print(f"Error: Directory '{pdf_dir}' not found. Please create it and place PDF files inside.")
+    if not pdf_files_to_process:
+        print("No PDF files provided for ticker extraction. Exiting.")
         return []
 
-    pdf_files = [f for f in os.listdir(pdf_dir) if f.lower().endswith('.pdf')]
+    print(f"Processing {len(pdf_files_to_process)} PDF files for ticker extraction...")
 
-    if not pdf_files:
-        print(f"No PDF files found in '{pdf_dir}'. Please place PDF files inside.")
-        return []
-
-    print(f"Processing {len(pdf_files)} PDF files in '{pdf_dir}'...")
-
-    for pdf_file in pdf_files:
-        pdf_path = os.path.join(pdf_dir, pdf_file)
-        print(f"Extracting text from {pdf_file}...")
+    for pdf_path in pdf_files_to_process:
+        print(f"Extracting text from {os.path.basename(pdf_path)}...")
         text = extract_text_from_pdf(pdf_path)
         
         if text:
-            print(f"Text extracted from {pdf_file} (first 200 chars): {text[:200]}...")
-            print(f"Sending text from {pdf_file} to Gemini for ticker extraction...")
+            print(f"Text extracted from {os.path.basename(pdf_path)} (first 200 chars): {text[:200]}...")
+            print(f"Sending text from {os.path.basename(pdf_path)} to Gemini for ticker extraction...")
             tickers = extract_tickers_from_text(text)
             if tickers:
-                print(f"Found tickers in {pdf_file}: {', '.join(tickers)}")
+                print(f"Found tickers in {os.path.basename(pdf_path)}: {', '.join(tickers)}")
                 all_extracted_tickers.update(tickers)
-                file_results[pdf_file] = sorted(list(tickers))
+                file_results[os.path.basename(pdf_path)] = sorted(list(tickers))
             else:
-                print(f"No tickers found in {pdf_file}.")
-                file_results[pdf_file] = []
+                print(f"No tickers found in {os.path.basename(pdf_path)}.")
+                file_results[os.path.basename(pdf_path)] = []
         else:
-            print(f"No text extracted from {pdf_file}.")
-            file_results[pdf_file] = []
+            print(f"No text extracted from {os.path.basename(pdf_path)}.")
+            file_results[os.path.basename(pdf_path)] = []
 
     print("\n--- Summary of Tickers per File ---")
     for filename, tickers in file_results.items():
@@ -114,5 +106,10 @@ def run_ticker_extraction():
     return final_tickers_list
 
 if __name__ == "__main__":
-    extracted_tickers = run_ticker_extraction()
-    # The printing is already handled within run_ticker_extraction for standalone execution
+    # For standalone testing, provide dummy files
+    dummy_files = [os.path.join("files", f) for f in os.listdir("files/") if f.lower().endswith('.pdf') and f.startswith('COR_')][:3]
+    if not dummy_files:
+        print("No dummy PDF files found in 'files/' for standalone testing. Please place some COR_*.pdf files.")
+    else:
+        extracted_tickers = run_ticker_extraction(dummy_files)
+        # The printing is already handled within run_ticker_extraction for standalone execution

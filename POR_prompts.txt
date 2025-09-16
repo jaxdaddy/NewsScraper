@@ -1,0 +1,14 @@
+1. Portfolio Performance Summary (POR)
+Summarize the overall performance of the portfolio, including total returns, asset allocation changes, and any significant gains or losses. Provide a concise summary using Markdown bullet points.
+
+2. Top Holdings Analysis (POR)
+Identify the top 5-10 holdings in the portfolio. For each, briefly describe its contribution to overall performance and any recent news or events impacting it. Use a Markdown numbered list.
+
+3. Sector/Industry Exposure (POR)
+Analyze the portfolio's exposure across different sectors or industries. Highlight any significant overweight or underweight positions and their rationale. Use a Markdown bulleted list.
+
+4. Risk Assessment (POR)
+Identify and summarize the key risks associated with the portfolio, such as concentration risk, market volatility, or liquidity risk. Use a Markdown bulleted list.
+
+5. Future Strategy and Rebalancing (POR)
+Summarize the proposed future strategy for the portfolio, including any rebalancing plans, new investment themes, or adjustments to risk tolerance. Use a Markdown bulleted list.

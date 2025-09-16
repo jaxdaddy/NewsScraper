@@ -12,6 +12,9 @@ The NewsScraper project is a Python-based pipeline that automates the extraction
 *   **News Scraping**: Gathers and summarizes financial news articles related to the extracted tickers.
 *   **Prompt Evaluation**: Utilizes Google Gemini to analyze PDF content against specific prompts and generates a detailed PDF report of the evaluations.
 *   **Orchestrated Workflow**: A master script (`main.py`) coordinates the entire pipeline.
+*   **Multi-File Type Support**: Handles different types of PDF reports (e.g., Corporate Movers, Company Yearly, Portfolio Reports) with type-specific prompts.
+*   **Dynamic File Selection**: Automatically identifies and processes the most recent files of a selected type.
+*   **News Summary Management**: Cleans up old news summaries and includes the latest one in prompt evaluations.
 
 **Main Technologies:**
 
@@ -29,15 +32,18 @@ The project follows a modular architecture, with `main.py` acting as the central
 
 1.  **`main.py` (Master Controller)**:
     *   Serves as the entry point for the entire pipeline.
-    *   Calls `sym_extract.py` to get a list of ticker symbols.
+    *   Handles initial file cleanup (old `NewsSummary` files).
+    *   Prompts the user for file type selection (COR, COY, POR, POY).
+    *   Identifies the three most recent PDF files of the selected type.
+    *   Calls `sym_extract.py` to get a list of ticker symbols from the selected PDFs.
     *   Passes the ticker list to `scraper.py` to fetch and summarize news.
-    *   Calls `prompt_evaluator.py` to perform Gemini-based evaluations and generate a PDF report.
+    *   Calls `prompt_evaluator.py` to perform Gemini-based evaluations using the selected PDFs, `options_primer.pdf`, and the newly generated `NewsSummary` file.
     *   Includes robust error handling and logging for each step.
 
 2.  **`sym_extract.py` (Ticker Extraction Module)**:
-    *   **Purpose**: Extracts stock ticker symbols from PDF files located in the `files/` directory.
+    *   **Purpose**: Extracts stock ticker symbols from a provided list of PDF file paths.
     *   **Process**: Reads PDF content, sends it to Google Gemini with a specific prompt to identify tickers, and returns a deduplicated list of symbols.
-    *   **Key Function**: `run_ticker_extraction()`
+    *   **Key Function**: `run_ticker_extraction(pdf_paths)`
 
 3.  **`scraper.py` (News Scraping Module)**:
     *   **Purpose**: Fetches and summarizes financial news articles for a given list of company stock symbols.
@@ -45,9 +51,9 @@ The project follows a modular architecture, with `main.py` acting as the central
     *   **Key Function**: `run_news_scraping(companies_list)`
 
 4.  **`prompt_evaluator.py` (Prompt Evaluation Module)**:
-    *   **Purpose**: Evaluates the content of files in the `files/` directory against prompts defined in `prompts.txt` using Google Gemini, and generates a PDF report.
-    *   **Process**: Reads prompts, extracts text from files (including PDFs), sends content and prompts to Gemini, and compiles responses into `files/PromptSummary_MMDDYYYY.pdf`.
-    *   **Key Function**: `run_prompt_evaluation()`
+    *   **Purpose**: Evaluates the content of specified files against type-specific prompts using Google Gemini, and generates a PDF report.
+    *   **Process**: Reads prompts from the appropriate `TYPE_prompts.txt` file, extracts content from provided file paths (including `options_primer.pdf` and `NewsSummary`), sends content and prompts to Gemini, and compiles responses into `output/PromptSummary_TYPE_MMDDYYYY.pdf`.
+    *   **Key Function**: `run_prompt_evaluation(file_type, pdf_paths, news_summary_path)`
 
 ## Building and Running the Project
 
@@ -73,16 +79,23 @@ To set up and run the project, follow these steps:
         ```
 
 4.  **Place PDF Files**:
-    *   Place your PDF documents (e.g., financial reports, filings) into the `files/` directory. These will be used for ticker extraction and prompt evaluation.
+    *   Place your PDF documents (e.g., `COR_Movers_YYYY-MM-DD.pdf`, `COY_Annual_YYYY-MM-DD.pdf`, `POR_Report_YYYY-MM-DD.pdf`, `POY_Report_YYYY-MM-DD.pdf`) into the `files/` directory. Ensure filenames follow the `TYPE_Description_YYYY-MM-DD.pdf` format.
+    *   Ensure `options_primer.pdf` is also present in the `files/` directory.
 
-5.  **Define Prompts**:
-    *   Open the `prompts.txt` file in the project root.
-    *   Add the prompts you want Gemini to evaluate, one prompt per line. The current `prompts.txt` contains detailed prompts for market movers, news impact, risk signals, momentum/sentiment, and investment watchlists.
+5.  **Define Prompts**: 
+    *   Create separate prompt files for each file type you intend to process (e.g., `COR_prompts.txt`, `COY_prompts.txt`, `POR_prompts.txt`, `POY_prompts.txt`).
+    *   Adapt the prompts in each file to be contextually appropriate for the specific data type.
 
 6.  **Run the Main Script**:
     ```bash
     python3 main.py
     ```
+    *The script will prompt you to select a file type.* 
+
+## Generated Reports
+
+*   **News Summary**: `files/NewsSummary_MMDDYYYY.txt` - Contains summarized financial news for the extracted tickers.
+*   **Prompt Evaluation Report**: `output/PromptSummary_TYPE_MMDDYYYY.pdf` - Contains the evaluation of your PDF files by Gemini based on the type-specific prompts.
 
 ## Development Conventions
 
@@ -91,7 +104,7 @@ To set up and run the project, follow these steps:
 *   **API Key Management**: Sensitive API keys are stored in a `.env` file and loaded using `python-dotenv`, ensuring they are not hardcoded or committed to version control (the `.env` file is listed in `.gitignore`).
 *   **Modularity**: The project is structured into distinct modules (`sym_extract.py`, `scraper.py`, `prompt_evaluator.py`) with `main.py` serving as the orchestrator, promoting code reusability and maintainability.
 *   **Error Handling and Logging**: Each step in the `main.py` pipeline includes explicit error handling and progress logging for better visibility and debugging.
-*   **Output Management**: Generated reports (`NewsSummary_MMDDYYYY.txt`, `PromptSummary_MMDDYYYY.pdf`) are saved within the `files/` directory.
+*   **Output Management**: Generated reports (`NewsSummary_MMDDYYYY.txt`, `PromptSummary_TYPE_MMDDYYYY.pdf`) are saved within the `files/` directory for news summaries and `output/` for prompt evaluation reports.
 
 ## Project Structure
 
@@ -105,8 +118,17 @@ To set up and run the project, follow these steps:
 ├── .env                    # Stores Gemini API key (ignored by Git)
 ├── .gitignore              # Specifies files/ and .env to be ignored
 ├── files/                  # Directory for PDF input and generated reports
-│   ├── your_document.pdf   # Example input PDF
+│   ├── COR_Movers_YYYY-MM-DD.pdf # Example input PDF
+│   ├── COY_Annual_YYYY-MM-DD.pdf # Example input PDF
+│   ├── POR_Report_YYYY-MM-DD.pdf # Example input PDF
+│   ├── POY_Report_YYYY-MM-DD.pdf # Example input PDF
+│   ├── options_primer.pdf  # Always included in prompt evaluation
 │   ├── NewsSummary_MMDDYYYY.txt # Generated news summary
-│   └── PromptSummary_MMDDYYYY.pdf # Generated prompt evaluation report
-└── prompts.txt             # Prompts for Gemini evaluation
+│   └── ...
+├── output/                 # Directory for final PromptSummary reports
+│   └── PromptSummary_TYPE_MMDDYYYY.pdf # Generated prompt evaluation report
+├── COR_prompts.txt         # Prompts for Corporate Movers Reports
+├── COY_prompts.txt         # Prompts for Company Yearly Reports
+├── POR_prompts.txt         # Prompts for Portfolio Reports
+└── POY_prompts.txt         # Prompts for Portfolio Yearly Reports
 ```

@@ -7,24 +7,23 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from datetime import datetime
 import markdown # Import the markdown library
 
-def read_prompts(prompts_file="prompts.txt"):
-    """Reads prompts from the prompts.txt file."""
+def read_prompts(file_type):
+    prompts_file = f"{file_type}_prompts.txt"
     prompts = []
     if not os.path.exists(prompts_file):
-        print(f"Error: '{prompts_file}' not found.")
+        print(f"Error: '{prompts_file}' not found. Please create it with prompts for {file_type} files.")
         return prompts
     with open(prompts_file, 'r', encoding='utf-8') as f:
         prompts = [line.strip() for line in f if line.strip()]
     return prompts
 
-def get_file_content_for_gemini(files_dir="files/"):
-    """Reads content of all files in files/ directory and prepares for Gemini multimodal input."""
+def get_file_content_for_gemini(file_paths):
+    """Reads content of specified files and prepares for Gemini multimodal input."""
     contents = []
-    for filename in os.listdir(files_dir):
-        filepath = os.path.join(files_dir, filename)
+    for filepath in file_paths:
         if os.path.isfile(filepath):
             try:
-                if filename.lower().endswith('.pdf'):
+                if filepath.lower().endswith('.pdf'):
                     # For PDFs, extract text
                     document = fitz.open(filepath)
                     text = ""
@@ -32,13 +31,13 @@ def get_file_content_for_gemini(files_dir="files/"):
                         page = document.load_page(page_num)
                         text += page.get_text()
                     document.close()
-                    contents.append({'mime_type': 'text/plain', 'data': text, 'filename': filename})
+                    contents.append({'mime_type': 'text/plain', 'data': text, 'filename': os.path.basename(filepath)})
                 else:
                     # For other text files, read directly
                     with open(filepath, 'r', encoding='utf-8') as f:
-                        contents.append({'mime_type': 'text/plain', 'data': f.read(), 'filename': filename})
+                        contents.append({'mime_type': 'text/plain', 'data': f.read(), 'filename': os.path.basename(filepath)})
             except Exception as e:
-                print(f"Error reading file {filename}: {e}")
+                print(f"Error reading file {os.path.basename(filepath)}: {e}")
     return contents
 
 def evaluate_with_gemini(prompts, file_contents):
@@ -92,28 +91,58 @@ def generate_pdf_report(evaluations, output_filename):
     except Exception as e:
         print(f"Error generating PDF report: {e}")
 
-def run_prompt_evaluation():
+def run_prompt_evaluation(file_type, selected_pdf_files, news_summary_path):
     print("Starting prompt evaluation...")
-    prompts = read_prompts()
+    prompts = read_prompts(file_type)
     if not prompts:
-        print("No prompts found in prompts.txt. Skipping evaluation.")
+        print(f"No prompts found for file type '{file_type}'. Skipping evaluation.")
         return
 
-    files_dir = "files/"
-    if not os.path.exists(files_dir) or not os.listdir(files_dir):
-        print(f"No files found in '{files_dir}'. Skipping prompt evaluation.")
+    # Include options_primer.pdf and news_summary_path
+    all_files_for_gemini = list(selected_pdf_files)
+    options_primer_path = os.path.join("files", "options_primer.pdf")
+    if os.path.exists(options_primer_path):
+        all_files_for_gemini.append(options_primer_path)
+    else:
+        print(f"Warning: '{options_primer_path}' not found. Skipping its inclusion in Gemini evaluation.")
+
+    if news_summary_path and os.path.exists(news_summary_path):
+        all_files_for_gemini.append(news_summary_path)
+    else:
+        print(f"Warning: News summary file '{news_summary_path}' not found or not provided. Skipping its inclusion in Gemini evaluation.")
+
+    if not all_files_for_gemini:
+        print("No files to evaluate with Gemini. Skipping prompt evaluation.")
         return
 
-    file_contents = get_file_content_for_gemini(files_dir)
+    print("Files being sent to Gemini for evaluation:")
+    for f_path in all_files_for_gemini:
+        print(f"- {os.path.basename(f_path)}")
+
+    file_contents = get_file_content_for_gemini(all_files_for_gemini)
     if not file_contents:
         print("No readable file content found for Gemini evaluation. Skipping.")
         return
 
     evaluations = evaluate_with_gemini(prompts, file_contents)
 
+    # Output Management: Save to output/ directory
+    output_dir = "output/"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     today = datetime.now().strftime("%m%d%Y")
-    output_pdf_filename = os.path.join("files", f"PromptSummary_{today}.pdf") # Save to files/ directory
+    output_pdf_filename = os.path.join(output_dir, f"PromptSummary_{file_type}_{today}.pdf")
     generate_pdf_report(evaluations, output_pdf_filename)
 
 if __name__ == "__main__":
-    run_prompt_evaluation()
+    # For standalone testing, provide dummy file type and files
+    # This part will likely be removed or simplified once integrated with main.py
+    print("This script is intended to be run via main.py for full functionality.")
+    print("For standalone testing, ensure you have COR_prompts.txt and COR_*.pdf files in 'files/'.")
+    dummy_file_type = "COR"
+    dummy_pdf_files = [os.path.join("files", f) for f in os.listdir("files/") if f.lower().endswith('.pdf') and f.startswith('COR_')][:3]
+    if dummy_pdf_files:
+        run_prompt_evaluation(dummy_file_type, dummy_pdf_files)
+    else:
+        print("No dummy COR_*.pdf files found for standalone testing.")

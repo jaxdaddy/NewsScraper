@@ -1,0 +1,14 @@
+1. Financial Performance Overview (COY)
+Summarize the key financial performance highlights from the Company Yearly Report, including revenue, profit, and key growth metrics. Provide a concise summary using Markdown bullet points.
+
+2. Segment Analysis (COY)
+Identify and summarize the performance of different business segments or product lines within the Company Yearly Report. Highlight any significant changes or trends. Use Markdown bullet points for each segment.
+
+3. Risk Factors and Outlook (COY)
+Extract and summarize the key risk factors and the company's outlook for the upcoming year as presented in the Company Yearly Report. Use Markdown bullet points for each risk and outlook point.
+
+4. Capital Allocation and Shareholder Returns (COY)
+Analyze how the company allocated its capital and generated shareholder returns as detailed in the Company Yearly Report (e.g., dividends, share buybacks, M&A). Provide a concise summary using Markdown bullet points.
+
+5. ESG and Sustainability Initiatives (COY)
+Summarize the company's Environmental, Social, and Governance (ESG) and sustainability initiatives as described in the Company Yearly Report. Use Markdown bullet points for key initiatives and achievements.

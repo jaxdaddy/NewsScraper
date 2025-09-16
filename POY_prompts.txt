@@ -1,0 +1,14 @@
+1. Annual Portfolio Performance Review (POY)
+Provide a comprehensive review of the portfolio's annual performance, including year-over-year returns, benchmark comparisons, and attribution analysis. Summarize key drivers of performance using Markdown bullet points.
+
+2. Major Portfolio Changes (POY)
+Detail any significant changes made to the portfolio's asset allocation, holdings, or investment strategy throughout the year. Explain the rationale behind these changes. Use a Markdown numbered list.
+
+3. Market Outlook and Future Strategy (POY)
+Summarize the market outlook for the upcoming year and the proposed adjustments to the portfolio's strategy based on this outlook. Include any new investment themes or risk considerations. Use Markdown bullet points.
+
+4. Fee and Expense Analysis (POY)
+Provide a summary of all fees and expenses incurred by the portfolio during the year. Analyze their impact on net returns. Use Markdown bullet points.
+
+5. Compliance and Regulatory Updates (POY)
+Summarize any relevant compliance or regulatory updates that impacted the portfolio during the year, and how the portfolio adapted to these changes. Use Markdown bullet points.
